@@ -1,0 +1,11 @@
+[project]
+name = "ecg-mcp"
+version = "0.1.0"
+description = "MCP Server over neurokit2's functionality"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.21.0",
+    "neurokit2>=0.2.12",
+]
