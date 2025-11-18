@@ -126,7 +126,9 @@ def _safe_join(base: Path, filename: str) -> Path:
     try:
         resolved_candidate.relative_to(resolved_base)
     except ValueError:
-        raise ValueError("Path traversal detected")
+        raise ValueError(
+            f"Path traversal detected: resolved path '{resolved_candidate}' must be within the base directory '{resolved_base}'"
+        )
     return resolved_candidate
 
 
