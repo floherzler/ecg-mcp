@@ -202,7 +202,7 @@ async def ecg_simulate(
 
 
 @mcp.tool()
-async def ecg_process(simulation_uri: str, sampling_rate: int):
+async def ecg_process(simulation_uri: str, sampling_rate: int) -> dict:
     """Load raw simulation, run nk.ecg_process, return processed URI."""
 
     raw_ecg = await _read_json_resource(simulation_uri)
