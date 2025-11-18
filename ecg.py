@@ -12,9 +12,7 @@ import matplotlib.pyplot as plt
 
 from mcp.server.fastmcp import FastMCP
 
-# ----------------------------------------
-# MCP Server
-# ----------------------------------------
+
 mcp = FastMCP("ecg-mcp")
 
 BASE = Path(__file__).resolve().parent
@@ -27,11 +25,6 @@ PLOT_DIR = DATA_DIR / "plots"
 SIM_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# ----------------------------------------
-# Helper: THIS fixes the JSON errors
-# ----------------------------------------
 
 
 def _to_json_serializable(value: Any) -> Any:
