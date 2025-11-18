@@ -284,7 +284,7 @@ async def ecg_plot(processed_uri: str):
 
 
 @mcp.tool()
-async def ecg_clean(signal: list[float], sampling_rate: int = 1000):
+async def ecg_clean(signal: list[float], sampling_rate: int = 1000) -> list[float]:
     """Clean a raw ECG signal and return the filtered waveform.
 
     Args:
