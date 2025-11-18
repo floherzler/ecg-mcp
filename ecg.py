@@ -256,7 +256,7 @@ async def ecg_process(simulation_uri: str, sampling_rate: int) -> dict:
 
 
 @mcp.tool()
-async def ecg_plot(processed_uri: str):
+async def ecg_plot(processed_uri: str) -> dict:
     """Plot a processed ECG and return a PNG resource URI.
 
     Args:
