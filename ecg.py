@@ -134,6 +134,8 @@ def _safe_join(base: Path, filename: str) -> Path:
 def read_simulation(sim_id: str) -> str:
     _validate_resource_id(sim_id)
     path = _safe_join(SIM_DATA_DIR, f"{sim_id}.json")
+    if not path.exists():
+        raise FileNotFoundError(f"Simulation resource '{sim_id}' not found")
     return path.read_text()
 
 
@@ -141,6 +143,8 @@ def read_simulation(sim_id: str) -> str:
 def read_processed(proc_id: str) -> str:
     _validate_resource_id(proc_id)
     path = _safe_join(PROCESSED_DATA_DIR, f"{proc_id}.json")
+    if not path.exists():
+        raise FileNotFoundError(f"Processed resource '{proc_id}' not found")
     return path.read_text()
 
 
@@ -148,6 +152,8 @@ def read_processed(proc_id: str) -> str:
 def read_plot(plot_id: str) -> bytes:
     _validate_resource_id(plot_id)
     path = _safe_join(PLOT_DIR, f"{plot_id}.png")
+    if not path.exists():
+        raise FileNotFoundError(f"Plot resource '{plot_id}' not found")
     return path.read_bytes()
 
 
@@ -176,7 +182,16 @@ async def ecg_simulate(
     heart_rate_std: int = 1,
     method: str = "ecgsyn",
 ):
-    """Simulate raw ECG and return a resource URI."""
+    """Simulate a raw ECG signal and return a resource URI.
+
+    Args:
+        duration: Length of the signal in seconds.
+        sampling_rate: Samples per second for the generated signal.
+        noise: Amount of gaussian noise added to the signal.
+        heart_rate: Target average heart rate.
+        heart_rate_std: Standard deviation of the heart rate sampling.
+        method: Simulation algorithm passed to `nk.ecg_simulate`.
+    """
 
     ecg = nk.ecg_simulate(
         duration=duration,
@@ -240,7 +255,11 @@ async def ecg_process(simulation_uri: str, sampling_rate: int) -> dict:
 
 @mcp.tool()
 async def ecg_plot(processed_uri: str):
-    """Plot a processed ECG and return a PNG resource URI."""
+    """Plot a processed ECG and return a PNG resource URI.
+
+    Args:
+        processed_uri: URI of the processed simulation data to plot.
+    """
 
     data = await _read_json_resource(processed_uri)
 
@@ -264,7 +283,12 @@ async def ecg_plot(processed_uri: str):
 
 @mcp.tool()
 async def ecg_clean(signal: list[float], sampling_rate: int = 1000):
-    """Clean raw ECG signal using nk.ecg_clean()."""
+    """Clean a raw ECG signal and return the filtered waveform.
+
+    Args:
+        signal: Raw ECG voltage samples.
+        sampling_rate: Sampling rate for the signal (defaults to 1000 Hz).
+    """
     cleaned = nk.ecg_clean(signal, sampling_rate=sampling_rate)
     return cleaned.tolist()
 
