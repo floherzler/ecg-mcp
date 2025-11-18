@@ -157,7 +157,7 @@ def read_plot(plot_id: str) -> bytes:
 
 
 @mcp.tool()
-async def debug_resource(uri: str):
+async def debug_resource(uri: str) -> dict:
     """Debug an MCP resource by returning its type, repr, and decoded text."""
     content = await mcp.read_resource(uri)
     return {
