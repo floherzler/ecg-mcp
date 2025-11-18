@@ -169,8 +169,8 @@ async def debug_resource(uri: str) -> dict:
 
 @mcp.tool()
 async def ecg_simulate(
-    duration: int = 3,
-    sampling_rate: int = 50,
+    duration: int = 10,
+    sampling_rate: int = 1000,
     noise: float = 0.01,
     heart_rate: int = 70,
     heart_rate_std: int = 1,
