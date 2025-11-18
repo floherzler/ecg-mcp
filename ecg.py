@@ -29,11 +29,6 @@ PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ----------------------------------------
-# Helper: THIS fixes the JSON errors
-# ----------------------------------------
-
-
 def _to_json_serializable(value: Any) -> Any:
     """Convert NumPy and pandas types recursively to JSON-friendly Python types."""
     if isinstance(value, np.ndarray):
