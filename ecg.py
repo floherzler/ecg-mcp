@@ -35,7 +35,19 @@ PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _to_json_serializable(value: Any) -> Any:
-    """Convert NumPy and pandas types recursively to JSON-friendly Python types."""
+    """
+    Convert NumPy/pandas structures recursively into JSON-friendly Python types.
+
+    Parameters
+    ----------
+    value : Any
+        The value to normalize before JSON serialisation.
+
+    Returns
+    -------
+    Any
+        A pure Python structure matching the shape of the input.
+    """
     if isinstance(value, np.ndarray):
         return value.tolist()
     if isinstance(value, (np.generic,)):
@@ -52,7 +64,19 @@ def _to_json_serializable(value: Any) -> Any:
 
 
 async def _resource_to_text(uri: str) -> str:
-    """Read an MCP resource and normalize it to plain text."""
+    """
+    Read an MCP resource and convert it into a plain-text string.
+
+    Parameters
+    ----------
+    uri : str
+        The MCP URI to load with `mcp.read_resource`.
+
+    Returns
+    -------
+    str
+        Decoded text content, or a placeholder if the content is binary.
+    """
     content = await mcp.read_resource(uri)
 
     def _decode_bytes(data: bytes | bytearray) -> str:
@@ -92,6 +116,24 @@ async def _resource_to_text(uri: str) -> str:
 
 
 async def _read_json_resource(uri: str) -> Any:
+    """
+    Load an MCP resource and parse its JSON payload.
+
+    Parameters
+    ----------
+    uri : str
+        MCP URI containing JSON content.
+
+    Returns
+    -------
+    Any
+        Parsed JSON payload.
+
+    Raises
+    ------
+    ValueError
+        If the resource is empty.
+    """
     text = await _resource_to_text(uri)
     if not text.strip():
         raise ValueError(f"Resource {uri} is empty!")
@@ -99,7 +141,19 @@ async def _read_json_resource(uri: str) -> Any:
 
 
 def _resource_id_from_uri(uri: str) -> str:
-    """Extract the unique identifier from an MCP URI."""
+    """
+    Extract the final identifier segment from an MCP URI.
+
+    Parameters
+    ----------
+    uri : str
+        MCP URI to parse.
+
+    Returns
+    -------
+    str
+        The resource identifier (generates a UUID if the URI ends with '/').
+    """
     candidate = uri.rstrip("/").split("/")[-1]
     return candidate or uuid4().hex
 
@@ -113,7 +167,19 @@ _ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _validate_resource_id(resource_id: str) -> None:
-    """Allow only safe characters in resource ids to prevent path traversal."""
+    """
+    Ensure resource identifiers use a safe character set.
+
+    Parameters
+    ----------
+    resource_id : str
+        Candidate identifier provided by the user.
+
+    Raises
+    ------
+    ValueError
+        If the identifier contains unsafe characters or is not a string.
+    """
     if not isinstance(resource_id, str) or not _ID_PATTERN.match(resource_id):
         raise ValueError("Invalid resource id")
 
@@ -153,6 +219,19 @@ def _safe_join(base: Path, filename: str) -> Path:
 
 @mcp.resource("ecg://simulations/{sim_id}", mime_type="application/json")
 def read_simulation(sim_id: str) -> str:
+    """
+    Return the raw simulation JSON text for a resource identifier.
+
+    Parameters
+    ----------
+    sim_id : str
+        Identifier for the simulated ECG resource.
+
+    Returns
+    -------
+    str
+        Raw JSON content of the simulated ECG.
+    """
     _validate_resource_id(sim_id)
     path = _safe_join(SIM_DATA_DIR, f"{sim_id}.json")
     if not path.exists():
@@ -162,6 +241,19 @@ def read_simulation(sim_id: str) -> str:
 
 @mcp.resource("ecg://processed/{proc_id}", mime_type="application/json")
 def read_processed(proc_id: str) -> str:
+    """
+    Return the processed ECG JSON text for a resource identifier.
+
+    Parameters
+    ----------
+    proc_id : str
+        Identifier for the processed ECG resource.
+
+    Returns
+    -------
+    str
+        Raw JSON content of the processed ECG.
+    """
     _validate_resource_id(proc_id)
     path = _safe_join(PROCESSED_DATA_DIR, f"{proc_id}.json")
     if not path.exists():
@@ -171,6 +263,19 @@ def read_processed(proc_id: str) -> str:
 
 @mcp.resource("ecg://plots/{plot_id}", mime_type="image/png")
 def read_plot(plot_id: str) -> bytes:
+    """
+    Return the PNG bytes for a plotted ECG resource.
+
+    Parameters
+    ----------
+    plot_id : str
+        Identifier for the plot resource.
+
+    Returns
+    -------
+    bytes
+        PNG data for the requested plot.
+    """
     _validate_resource_id(plot_id)
     path = _safe_join(PLOT_DIR, f"{plot_id}.png")
     if not path.exists():
@@ -218,15 +323,28 @@ async def ecg_simulate(
     heart_rate_std: int = 1,
     method: str = "ecgsyn",
 ):
-    """Simulate a raw ECG signal and return a resource URI.
+    """
+    Simulate a raw ECG signal and return a resource URI.
 
-    Args:
-        duration: Length of the signal in seconds.
-        sampling_rate: Samples per second for the generated signal.
-        noise: Amount of gaussian noise added to the signal.
-        heart_rate: Target average heart rate.
-        heart_rate_std: Standard deviation of the heart rate sampling.
-        method: Simulation algorithm passed to `nk.ecg_simulate`.
+    Parameters
+    ----------
+    duration : int, optional
+        Length of the signal in seconds.
+    sampling_rate : int, optional
+        Samples per second for the generated signal.
+    noise : float, optional
+        Amount of gaussian noise added to the signal.
+    heart_rate : int, optional
+        Target average heart rate.
+    heart_rate_std : int, optional
+        Standard deviation of the heart rate sampling.
+    method : str, optional
+        Simulation algorithm passed to `nk.ecg_simulate`.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the generated resource URI and metadata.
     """
 
     ecg = nk.ecg_simulate(
@@ -291,10 +409,18 @@ async def ecg_process(simulation_uri: str, sampling_rate: int) -> dict:
 
 @mcp.tool()
 async def ecg_plot(processed_uri: str) -> dict:
-    """Plot a processed ECG and return a PNG resource URI.
+    """
+    Plot a processed ECG and return a PNG resource URI.
 
-    Args:
-        processed_uri: URI of the processed simulation data to plot.
+    Parameters
+    ----------
+    processed_uri : str
+        URI of the processed simulation data to plot.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the plot URI and metadata.
     """
 
     data = await _read_json_resource(processed_uri)
@@ -319,11 +445,20 @@ async def ecg_plot(processed_uri: str) -> dict:
 
 @mcp.tool()
 async def ecg_clean(signal: list[float], sampling_rate: int = 1000) -> list[float]:
-    """Clean a raw ECG signal and return the filtered waveform.
+    """
+    Clean a raw ECG signal and return the filtered waveform.
 
-    Args:
-        signal: Raw ECG voltage samples.
-        sampling_rate: Sampling rate for the signal (defaults to 1000 Hz).
+    Parameters
+    ----------
+    signal : list[float]
+        Raw ECG voltage samples.
+    sampling_rate : int, optional
+        Sampling rate for the signal (defaults to 1000 Hz).
+
+    Returns
+    -------
+    list[float]
+        Filtered ECG signal samples.
     """
     cleaned = nk.ecg_clean(signal, sampling_rate=sampling_rate)
     return cleaned.tolist()
