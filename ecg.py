@@ -166,7 +166,22 @@ def read_plot(plot_id: str) -> bytes:
 
 @mcp.tool()
 async def debug_resource(uri: str) -> dict:
-    """Debug an MCP resource by returning its type, repr, and decoded text."""
+    """
+    Debug an MCP resource by returning its type, repr, and decoded text.
+
+    Parameters
+    ----------
+    uri : str
+        The URI of the MCP resource to debug.
+
+    Returns
+    -------
+    dict
+        A dictionary with the following keys:
+        - 'type': The type of the resource content as a string.
+        - 'repr': The string representation of the resource content.
+        - 'decoded': The decoded text content of the resource, if available.
+    """
     content = await mcp.read_resource(uri)
     return {
         "type": str(type(content)),
