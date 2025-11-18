@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from mcp.server.fastmcp import FastMCP
+import re
 
 # ----------------------------------------
 # MCP Server
@@ -109,21 +110,45 @@ def _resource_id_from_uri(uri: str) -> str:
 # ----------------------------------------
 
 
+_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _validate_resource_id(resource_id: str) -> None:
+    """Allow only safe characters in resource ids to prevent path traversal."""
+    if not isinstance(resource_id, str) or not _ID_PATTERN.match(resource_id):
+        raise ValueError("Invalid resource id")
+
+
+def _safe_join(base: Path, filename: str) -> Path:
+    """Join and resolve path, ensuring it stays under base directory."""
+    candidate = base / filename
+    resolved_base = base.resolve()
+    resolved_candidate = candidate.resolve()
+    try:
+        resolved_candidate.relative_to(resolved_base)
+    except ValueError:
+        raise ValueError("Path traversal detected")
+    return resolved_candidate
+
+
 @mcp.resource("ecg://simulations/{sim_id}", mime_type="application/json")
 def read_simulation(sim_id: str) -> str:
-    path = SIM_DATA_DIR / f"{sim_id}.json"
+    _validate_resource_id(sim_id)
+    path = _safe_join(SIM_DATA_DIR, f"{sim_id}.json")
     return path.read_text()
 
 
 @mcp.resource("ecg://processed/{proc_id}", mime_type="application/json")
 def read_processed(proc_id: str) -> str:
-    path = PROCESSED_DATA_DIR / f"{proc_id}.json"
+    _validate_resource_id(proc_id)
+    path = _safe_join(PROCESSED_DATA_DIR, f"{proc_id}.json")
     return path.read_text()
 
 
 @mcp.resource("ecg://plots/{plot_id}", mime_type="image/png")
 def read_plot(plot_id: str) -> bytes:
-    path = PLOT_DIR / f"{plot_id}.png"
+    _validate_resource_id(plot_id)
+    path = _safe_join(PLOT_DIR, f"{plot_id}.png")
     return path.read_bytes()
 
 
