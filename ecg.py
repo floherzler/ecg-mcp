@@ -322,7 +322,7 @@ async def ecg_simulate(
     heart_rate: int = 70,
     heart_rate_std: int = 1,
     method: str = "ecgsyn",
-):
+) -> dict:
     """
     Simulate a raw ECG signal and return a resource URI.
 
