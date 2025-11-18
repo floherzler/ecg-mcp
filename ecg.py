@@ -203,8 +203,21 @@ async def ecg_simulate(
 
 @mcp.tool()
 async def ecg_process(simulation_uri: str, sampling_rate: int) -> dict:
-    """Load raw simulation, run nk.ecg_process, return processed URI."""
+    """
+    Load raw ECG simulation, run nk.ecg_process, and return processed URI.
 
+    Parameters
+    ----------
+    simulation_uri : str
+        URI of the raw ECG simulation resource. Should be in the format "ecg://simulations/{id}".
+    sampling_rate : int
+        Sampling rate of the ECG signal in Hz (e.g., 50, 1000).
+
+    Returns
+    -------
+    dict
+        Dictionary containing the processed ECG resource URI and metadata.
+    """
     raw_ecg = await _read_json_resource(simulation_uri)
 
     signals, info = nk.ecg_process(raw_ecg, sampling_rate=sampling_rate)
