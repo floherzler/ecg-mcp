@@ -119,7 +119,26 @@ def _validate_resource_id(resource_id: str) -> None:
 
 
 def _safe_join(base: Path, filename: str) -> Path:
-    """Join and resolve path, ensuring it stays under base directory."""
+    """
+    Join and resolve a path, ensuring it stays under the base directory.
+
+    Parameters
+    ----------
+    base : Path
+        The base directory under which the file must reside.
+    filename : str
+        The filename or relative path to join with the base directory.
+
+    Returns
+    -------
+    Path
+        The resolved absolute path to the file.
+
+    Raises
+    ------
+    ValueError
+        If path traversal is detected (i.e., the resolved path is not under the base directory).
+    """
     candidate = base / filename
     resolved_base = base.resolve()
     resolved_candidate = candidate.resolve()
