@@ -213,7 +213,7 @@ async def ecg_simulate(
         "metadata": {
             "duration": duration,
             "sampling_rate": sampling_rate,
-            "samples": len(ecg),
+            "n_samples": len(ecg),
         },
     }
 
