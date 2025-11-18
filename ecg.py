@@ -2,8 +2,8 @@ import json
 from uuid import uuid4
 from pathlib import Path
 from collections.abc import Iterable
-from typing import Any, ByteString
-
+from typing import Any
+import re
 import numpy as np
 
 import neurokit2 as nk
@@ -11,7 +11,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from mcp.server.fastmcp import FastMCP
-import re
 
 # ----------------------------------------
 # MCP Server
@@ -56,7 +55,7 @@ async def _resource_to_text(uri: str) -> str:
     """Read an MCP resource and normalize it to plain text."""
     content = await mcp.read_resource(uri)
 
-    def _decode_bytes(data: ByteString) -> str:
+    def _decode_bytes(data: bytes | bytearray) -> str:
         try:
             return data.decode()
         except UnicodeDecodeError:
