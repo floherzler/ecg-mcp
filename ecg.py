@@ -15,15 +15,17 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("ecg-mcp")
 
-BASE = Path(__file__).resolve().parent
+BASE: Path = Path(__file__).resolve().parent
 
-DATA_DIR = BASE / "ecg_data"
-SIM_DATA_DIR = DATA_DIR / "simulations"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-PLOT_DIR = DATA_DIR / "plots"
+DATA_DIR: Path = BASE / "ecg_data"
+SIM_DATA_DIR: Path = DATA_DIR / "simulations"
+PROCESSED_DATA_DIR: Path = DATA_DIR / "processed"
+ANALYZED_DATA_DIR: Path = DATA_DIR / "analyzed"
+PLOT_DIR: Path = DATA_DIR / "plots"
 
 SIM_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+ANALYZED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -455,6 +457,39 @@ async def ecg_clean(signal: list[float], sampling_rate: int = 1000) -> list[floa
     """
     cleaned = nk.ecg_clean(signal, sampling_rate=sampling_rate)
     return cleaned.tolist()
+
+
+@mcp.tool()
+async def ecg_analyze(processed_uri: str):
+    """
+    Analyze a processed ECG and return an analyzed resource URI.
+
+    Parameters
+    ----------
+    processed_uri : str
+        URI of the processed simulation data to analyze.
+
+    Returns
+    -------
+    dict
+        Dict
+    """
+    data: dict = await _read_json_resource(uri=processed_uri)
+    signals: pd.DataFrame = pd.DataFrame(data=data["signals"])
+    info: dict = data["info"]
+
+    analyze_epochs: pd.DataFrame = nk.ecg_analyze(
+        data=signals,
+        sampling_rate=info["sampling_rate"],
+    )
+
+    # Convert the DataFrame return value into a JSON-serializable structure
+    analyze_epochs = _to_json_serializable(analyze_epochs.to_dict(orient="list"))
+
+    analyzed_id: str = _resource_id_from_uri(uri=processed_uri)
+    path: Path = ANALYZED_DATA_DIR / f"{analyzed_id}.json"
+    path.write_text(data=json.dumps(obj=analyze_epochs))
+    return {"uri": f"ecg://analyzed/{analyzed_id}"}
 
 
 # ----------------------------------------
